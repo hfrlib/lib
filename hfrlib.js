@@ -1,9 +1,8 @@
 /**
- * @file hfrlib_core.js
- * @brief core components of the HFRlib
+ * @file hfrlib.js
  * @author n0m1s
- * @version 0.0.1
- * @date 2018-01-01
+ * @version 0.0.2
+ * @date 2018-03-06
  */
 
 (function(HFRlib, undefined) {
@@ -47,6 +46,20 @@
             //TODO
         }
     };
+
+    HFRlib.Page = function(url) {
+        return loadPage(url);
+    }
+
+    HFRlib.CurrentPage = function() {
+        return parsePage(window.location.href, document);
+    };
+
+    HFRlib.PageType = Object.freeze({
+        Undefined: 0,
+        TopicList: 1,
+        Topic: 2
+    });
 
     /***********
      * PRIVATE *
@@ -289,6 +302,108 @@
         }
 
         return block;
+    }
+
+    //page functions
+    function loadPage(url) {
+        //TODO: XHR + documentFragment
+    }
+
+    function parsePage(url, doc) {
+        var ret = {};
+        ret.currentUrl = url;
+        ret.doc = doc;
+
+        detectPageType(doc, ret);
+        if(ret.type == HFRlib.PageType.TopicList)
+            parseTopicList(doc, ret);
+        else if(ret.type == HFRlib.PageType.Topic)
+            parseTopic(doc, ret);
+
+        ret.load = function() {alert("loading (" + this.currentUrl + ")");};
+
+        return ret;
+    }
+
+    function detectPageType(doc, ret) {
+        if(doc.querySelectorAll("table.main > tbody > tr.fondForum1Description").length > 0) {
+            ret.type = HFRlib.PageType.TopicList;
+        } else if(doc.querySelectorAll("table.main > tbody > tr.fondForum2Title").length > 0) {
+            ret.type = HFRlib.PageType.Topic;
+        } else {
+            ret.type = HFRlib.PageType.Undefined;
+        }
+    }
+
+    function parseTopicList(doc, ret) {
+        //TODO
+    }
+
+    function parseTopic(doc, ret) {
+        ret.title = {
+            dom: doc.querySelector("tr.fondForum2Title > th > div > h3"),
+
+            get: function(){return this.dom.textContent;},
+            set: function(val){this.dom.textContent = val;}
+        };
+
+        ret.messages = [];
+        var msgs = doc.querySelectorAll("table.messagetable > tbody > tr.message");
+        for(var i = 0; i < msgs.length; ++i) {
+            ret.messages.push(parseMessage(msgs[i]));
+        }
+    }
+
+    function parseMessage(root) {
+        var ret = {};
+        ret.dom = root;
+
+        ret.author = {
+            dom: root.querySelector("td.messCase1 > div > b.s2"),
+
+            get: function() {return this.dom.textContent;},
+            set: function(val) {this.dom.textContent = val;}
+        };
+
+        ret.message = {
+            dom: root.querySelector("td.messCase2 > div:not(.toolbar)"),
+
+            signature: {
+                dom: root.querySelector("td.messCase2 > div:not(.toolbar) > span.signature"),
+
+                get: function() {
+                    if(this.dom != null)
+                        return this.dom.innerHTML;
+                    else
+                        return "";
+                },
+                set: function(val) {
+                    if(this.dom != null)
+                        this.dom.innerHTML = val;
+                },
+
+                getTag: function() {
+                    if(this.dom != null)
+                        return this.dom.outerHTML;
+                    else
+                        return "";
+                }
+            },
+
+            getHTML: function() {
+                var domHTML = this.dom.cloneNode(true);
+                var sig = domHTML.querySelector("span.signature");
+                if(sig != null)
+                    domHTML.removeChild(sig);
+                return domHTML.innerHTML;
+            },
+            setHTML: function(val) {
+                var sig = this.signature.getTag();
+                this.dom.innerHTML = val + sig;
+            }
+        };
+
+        return ret;
     }
 
 }(window.HFRlib = window.HFRlib || {}));
