@@ -8,6 +8,13 @@
 (function(HFRlib, undefined) {
 
     /**********
+     * CONSTS *
+     **********/
+
+    HFRlib.BaseURL = "https://forum.hardware.fr/";
+    HFRlib.MPURL = HFRlib.BaseURL + "forum1.php?cat=prive";
+
+    /**********
      * PUBLIC *
      **********/
 
@@ -47,8 +54,8 @@
         }
     };
 
-    HFRlib.Page = function(url) {
-        return loadPage(url);
+    HFRlib.Page = function(url, anonymously, callback) {
+        loadPage(url, anonymously, callback);
     }
 
     HFRlib.CurrentPage = function() {
@@ -60,6 +67,13 @@
         TopicList: 1,
         Topic: 2
     });
+
+    //TODO remove tmp func
+    HFRlib.TmpGetMpJson = function() {
+        loadPage(HFRlib.MPURL, false, function(page) {
+            alert("loaded MP page");
+        });
+    };
 
     /***********
      * PRIVATE *
@@ -305,8 +319,15 @@
     }
 
     //page functions
-    function loadPage(url) {
-        //TODO: XHR + documentFragment
+    function loadPage(url, anonymously = true, callback) {
+        //TODO: handle anonymous requests
+        var xhr = new XMLHttpRequest();
+        xhr.onload = function() {
+            callback(parsePage(url, this.responseXML));
+        }
+        xhr.open("GET", url);
+        xhr.responseType = "document";
+        xhr.send();
     }
 
     function parsePage(url, doc) {
@@ -336,7 +357,31 @@
     }
 
     function parseTopicList(doc, ret) {
+        ret.topics = [];
+        var topics = doc.querySelectorAll("table.main > tbody > tr.sujet");
+        for(var i = 0; i < topics.length; ++i) {
+            var tmp = parseTopicListTopic(topics[i]);
+            ret.topics.push(tmp);
+            alert(tmp.title.get());
+        }
+    }
+
+    function parseTopicListTopic(root) {
+        var ret = {};
+        ret.dom = root;
+
+        ret.title = {
+            dom: root.querySelector("td.sujetCase3 > a.cCatTopic"),
+
+            get: function(){return this.dom.textContent;},
+            set: function(val){this.dom.textContent = val;},
+
+            getUrl: function(){return this.dom.href;},
+            setUrl: function(val){this.dom.href = val;}
+        };
         //TODO
+
+        return ret;
     }
 
     function parseTopic(doc, ret) {
