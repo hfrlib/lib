@@ -361,8 +361,9 @@
         var topics = doc.querySelectorAll("table.main > tbody > tr.sujet");
         for(var i = 0; i < topics.length; ++i) {
             var tmp = parseTopicListTopic(topics[i]);
+            //alert(tmp.auteur.get());
+            alert(tmp.lastmessage.date.get());
             ret.topics.push(tmp);
-            alert(tmp.title.get());
         }
     }
 
@@ -379,7 +380,68 @@
             getUrl: function(){return this.dom.href;},
             setUrl: function(val){this.dom.href = val;}
         };
-        //TODO
+
+        ret.lastpage = {
+            dom: root.querySelector("td.sujetCase4 > a.cCatTopic"),
+
+            get: function(){return this.dom.textContent;},
+            set: function(val){this.dom.textContent = val;},
+
+            getUrl: function(){return this.dom.href;},
+            setUrl: function(val){this.dom.href = val;}
+        };
+
+        ret.drapal = {
+            dom: root.querySelector("td.sujetCase5 > a.cCatTopic")
+            //TODO
+        };
+
+        if(root.querySelector("td.sujetCase6 > span") == null)
+        {
+            //auteur simple
+            ret.authors = {
+                dom: root.querySelector("td.sujetCase6 > a"),
+
+                get: function(){return this.dom.textContent;},
+                set: function(val){this.dom.textContent = val;},
+
+                getUrl: function(){return this.dom.href;},
+                setUrl: function(){this.dom.href = val;}
+            }
+        }
+        else
+        {
+            //auteur multiple
+            ret.authors = {
+                dom: root.querySelector("td.sujetCase6 > span"),
+
+                get: function(){return this.dom.title;},
+                set: function(val){this.dom.title = val;}
+            };
+        }
+
+        ret.answers = {
+            dom: root.querySelector("td.sujetCase7"),
+
+            get: function(){return this.dom.textContent;},
+            set: function(val){this.dom.textContent = val;},
+
+            lues: {
+                dom: root.querySelector("td.sujetCase8"),
+
+                get: function(){return this.dom.textContent;},
+                set: function(val){this.dom.textContent = val;}
+            }
+        };
+
+        ret.lastmessage = {
+            dom: root.querySelector("td.sujetCase9 > a"),
+
+            date: {
+                //TODO
+            },
+            //TODO
+        };
 
         return ret;
     }
